@@ -7,6 +7,8 @@ import com.example.todoapp.entity.Priority;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.UUID;
 
 public interface TaskService {
@@ -15,4 +17,6 @@ public interface TaskService {
     TaskDto createTask(CreateTaskRequestDto taskDto);
     TaskDto updateTask(UUID id, UpdateTaskRequestDto taskDto);
     void deleteTask(UUID id);
+
+    void importTasksFromCsv(MultipartFile file);
 }

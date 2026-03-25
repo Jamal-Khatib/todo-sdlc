@@ -12,8 +12,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.UUID;
 
 @Service
@@ -97,5 +105,29 @@ public class TaskServiceImpl implements TaskService {
             throw new TaskNotFoundException(id);
         }
         taskRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void importTasksFromCsv(MultipartFile file) {
+        try (CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
+            String[] line;
+            reader.readNext(); // Skip header
+            while ((line = reader.readNext()) != null) {
+                Task task = new Task();
+                task.setTitle(line[0]);
+                task.setDescription(line[1]);
+                task.setPriority(Priority.valueOf(line[2]));
+                if (line[3] != null && !line[3].isEmpty()) {
+                    task.setDueDate(LocalDate.parse(line[3]));
+                }
+                if (line.length > 4 && line[4] != null && !line[4].isEmpty()) {
+                    task.setTags(new HashSet<>(Arrays.asList(line[4].split(","))));
+                }
+                taskRepository.save(task);
+            }
+        } catch (IOException | CsvValidationException e) {
+            throw new RuntimeException("Failed to parse CSV file: " + e.getMessage());
+        }
     }
 }
