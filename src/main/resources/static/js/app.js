@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editModal = document.getElementById('edit-modal');
     const editTaskForm = document.getElementById('edit-task-form');
     const closeModalBtn = document.querySelector('.close-btn');
+    const importForm = document.getElementById('import-form');
 
     let currentPage = 0;
     let totalPages = 1;
@@ -214,6 +215,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error updating task:', error);
+        }
+    });
+
+    importForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('csv-file');
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('Please select a CSV file to import.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/tasks/import', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                importForm.reset();
+                fetchAndRenderTasks();
+            } else {
+                console.error('Failed to import tasks from CSV');
+            }
+        } catch (error) {
+            console.error('Error importing CSV:', error);
         }
     });
 
